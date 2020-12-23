@@ -3,6 +3,8 @@ import './App.css';
 import queryString from 'query-string';
 
 
+// Number of playlist
+
 
 class PlaylistCounter extends Component {
   render () {
@@ -14,7 +16,10 @@ class PlaylistCounter extends Component {
     );
   }
 }
-class HoursCounter extends Component {
+
+// Hours of listening songs
+
+/* class HoursCounter extends Component {
   render () {
     let allSongs = this.props.playlists.reduce( (songs, eachPlaylist) => {
       return songs.concat(eachPlaylist.songs)
@@ -28,7 +33,9 @@ class HoursCounter extends Component {
       </div>
     );
   }
-}
+} */
+
+// Playlist's name and image
 
 class Playlist extends Component {
   render () {
@@ -37,11 +44,11 @@ class Playlist extends Component {
       <div style = {{width : '25%', display: 'inline-block'}}> 
         <img src={playlist.imageUrl}  style = {{width : '150px'}}/>
         <h3>{playlist.name}</h3>
-        <ul>
+        <ol>
           {playlist.songs.map(song =>
             <li>{song.name}</li>
           )}          
-        </ul>
+        </ol>
       </div>
     );
   }
@@ -72,17 +79,39 @@ class App extends Component {
         }
     })) 
     
-    fetch ('https://api.spotify.com/v1/me/playlists', 
-    {headers: {'Authorization': 'Bearer ' + accessToken}
+    fetch ('https://api.spotify.com/v1/me/playlists', {
+      headers: {'Authorization': 'Bearer ' + accessToken}
     }).then(response => response.json())
-    .then(data => this.setState({
-      playlists: data.items.map(item => {
+      .then(playlistData => {
+         let playlists = playlistData.items
+         let trackDataPromises =  playlists.map(playlist => {
+         let responsePromise = fetch(playlist.tracks.href, {
+          headers: {'Authorization': 'Bearer ' + accessToken}
+          })
+          let trackDataPromise = responsePromise
+            .then(response=> response.json())
+          return trackDataPromise
+        })
+          let allTracksDataPromises = 
+          Promise.all(trackDataPromises)
+          let playlistsPromise = allTracksDataPromises.then(trackDatas => {
+          trackDatas.forEach((trackData, i)=> {
+            playlists[i].trackDatas = trackData.items.map(item => item.track.artists[0])
+          })
+          return playlists
+          })
+          return playlistsPromise
+      })
+    .then(playlists => this.setState({
+      playlists: playlists.map(item => {
+        console.log(item.trackDatas)
         return {
         name: item.name,
         imageUrl: item.images[0].url,
-        songs: []
-        }
-        
+        songs: item.trackDatas.slice(0,5).map(trackData => ({
+          name : trackData.name
+        }))
+        }       
       })
     }))
   }
@@ -100,9 +129,9 @@ class App extends Component {
           {this.state.user.name}'s Playlist 
         </h1>
        
-        
-        <PlaylistCounter playlists = {playlistToRender}/>
-        <HoursCounter playlists = {playlistToRender}/>
+        <h3> <PlaylistCounter playlists = {playlistToRender}/> </h3>
+
+        {/* <HoursCounter playlists = {playlistToRender}/> */}
         {playlistToRender.map(playlist => 
            <Playlist playlist = {playlist} />
         )}
