@@ -27,8 +27,7 @@ class Playlist extends Component {
         <h3>{playlist.name}</h3>
         <ol>
           {playlist.songs.map(song =>
-            <li>{song.name} - {song.popularity}</li>
-            
+            <li>{song.name}</li>            
           )}          
         </ol>
       </div>
@@ -91,7 +90,6 @@ class App extends Component {
             imageUrl: item.images[0].url,
             songs: item.trackDatas.slice(0,5).map(trackData => ({
             name : trackData.artists[0].name,
-            popularity : trackData.popularity
             }))
           }       
         })
