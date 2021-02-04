@@ -12,5 +12,3 @@
 5. go to ./client
 6. `npm install`
 7. `npm start`
-8. 
-## You are ready to make the evaluation
